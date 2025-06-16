@@ -1,0 +1,30 @@
+name: Package Lambda Zips
+
+on:
+  push:
+    branches:
+      - dev   # or 'main', or both
+
+jobs:
+  package-lambdas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Package all Lambda functions
+        run: |
+          python zip_changed.py
+
+      - name: Upload Lambda zips as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-zips
+          path: output/*.zip
