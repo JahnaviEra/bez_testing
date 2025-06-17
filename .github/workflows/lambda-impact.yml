@@ -1,0 +1,42 @@
+name: Show Lambda Impact
+
+on:
+  pull_request:
+
+jobs:
+  detect-lambda-impact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install PyYAML
+
+      - name: Find changed files
+        id: changes
+        run: |
+          echo "CHANGED_FILES<<EOF" >> $GITHUB_ENV
+          git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Show Changed Files
+        run: |
+          echo "### Files changed in this PR:"
+          echo "${{ env.CHANGED_FILES }}"
+
+      - name: Show File Diffs
+        run: |
+          echo "### Diff of all changes in this PR:"
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}
+
+      - name: Analyze Lambda Impact
+        run: |
+          python .github/scripts/lambda_impact.py "${{ github.workspace }}" "${{ env.CHANGED_FILES }}"
